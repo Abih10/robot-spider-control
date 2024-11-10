@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Robot Spider Controller</title>
     <style>
-        /* Style the joystick container */
+        /* Center the joystick container */
         #joystick-container {
             width: 300px;
             height: 300px;
@@ -21,8 +21,49 @@
     <h1>Robot Spider Controller</h1>
     <!-- Div for joystick -->
     <div id="joystick-container"></div>
+
     <!-- Joystick library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/nipplejs/0.9.0/nipplejs.min.js"></script>
-    <script src="script.js"></script> <!-- Link to JavaScript file -->
+    <script>
+        // Replace with your ESP32's IP address
+        const esp32Url = '192.168.0.103'; // Example: 'http://192.168.1.10'
+
+        // Initialize joystick in the joystick container
+        const joystickContainer = document.getElementById('joystick-container');
+        const manager = nipplejs.create({
+            zone: joystickContainer,
+            mode: 'static',
+            position: { left: '50%', top: '50%' },
+            color: 'blue',
+            size: 150
+        });
+
+        // Send a command to the ESP32
+        function sendCommand(direction) {
+            fetch(`${esp32Url}/control?dir=${direction}`)
+                .then(response => console.log(`Command sent: ${direction}`))
+                .catch(error => console.error('Error sending command:', error));
+        }
+
+        // Handle joystick movements
+        manager.on('move', (event, data) => {
+            const angle = data.angle.degree;
+
+            if (angle >= 45 && angle < 135) {
+                sendCommand('forward');
+            } else if (angle >= 135 && angle < 225) {
+                sendCommand('left');
+            } else if (angle >= 225 && angle < 315) {
+                sendCommand('reverse');
+            } else {
+                sendCommand('right');
+            }
+        });
+
+        // Stop command when joystick is released
+        manager.on('end', () => {
+            sendCommand('stop');
+        });
+    </script>
 </body>
 </html>
